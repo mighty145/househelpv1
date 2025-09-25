@@ -102,11 +102,48 @@ export default function HomePage({ onBack }) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/maids`);
       const data = await response.json();
-      setMaids(Array.isArray(data.maids) ? data.maids : []);
+      
+      // Sort maids by timestamp (newest first) as backup in case backend doesn't sort
+      const sortedMaids = Array.isArray(data.maids) 
+        ? data.maids.sort((a, b) => {
+            // Convert timestamp strings to Date objects for comparison
+            const dateA = new Date(a.timestamp || '1970-01-01');
+            const dateB = new Date(b.timestamp || '1970-01-01');
+            return dateB - dateA; // Newest first (descending order)
+          })
+        : [];
+      
+      setMaids(sortedMaids);
     } catch (error) {
       console.error('Error fetching maids:', error);
       setMaids([]);
     }
+  };
+
+  // Helper function to check if a maid is new (added within last 24 hours)
+  const isNewMaid = (timestamp) => {
+    if (!timestamp) return false;
+    const now = new Date();
+    const maidDate = new Date(timestamp);
+    const timeDiff = now - maidDate;
+    return timeDiff <= 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  };
+
+  // Helper function to format timestamp for display
+  const formatTimeAgo = (timestamp) => {
+    if (!timestamp) return '';
+    const now = new Date();
+    const maidDate = new Date(timestamp);
+    const timeDiff = now - maidDate;
+    
+    const hours = Math.floor(timeDiff / (60 * 60 * 1000));
+    const days = Math.floor(timeDiff / (24 * 60 * 60 * 1000));
+    
+    if (days === 0) {
+      if (hours === 0) return 'Just added';
+      return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+    }
+    return days === 1 ? '1 day ago' : `${days} days ago`;
   };
 
   const handleRefresh = async () => {
@@ -235,8 +272,12 @@ export default function HomePage({ onBack }) {
                 flexDirection: 'row',
                 alignItems: 'flex-start',
                 position: 'relative',
-                background: 'linear-gradient(120deg, #f7fbe7 0%, #e3f0e8 100%)',
-                border: '1px solid #b2c9ab',
+                background: isNewMaid(maid.timestamp) 
+                  ? 'linear-gradient(120deg, #fff9c4 0%, #f0f8e8 100%)' // Highlight new entries
+                  : 'linear-gradient(120deg, #f7fbe7 0%, #e3f0e8 100%)',
+                border: isNewMaid(maid.timestamp) 
+                  ? '2px solid #ffd700' // Gold border for new entries
+                  : '1px solid #b2c9ab',
               }}>
                 <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 2 }}>
                   {maid.photoPath ? (
@@ -256,8 +297,36 @@ export default function HomePage({ onBack }) {
                       <>
                         <div style={{ textAlign: 'left' }}>
                           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 600, textAlign: 'left', wordBreak: 'break-word', color: '#4b6043' }}>{maid.name}</Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 600, textAlign: 'left', wordBreak: 'break-word', color: '#4b6043' }}>
+                              {maid.name}
+                            </Typography>
+                            {isNewMaid(maid.timestamp) && (
+                              <Box sx={{ 
+                                ml: 1, 
+                                px: 1, 
+                                py: 0.2, 
+                                backgroundColor: '#ff6b35', 
+                                color: 'white', 
+                                borderRadius: 1, 
+                                fontSize: '0.7rem',
+                                fontWeight: 'bold',
+                                display: 'inline-flex',
+                                alignItems: 'center'
+                              }}>
+                                ✨ NEW
+                              </Box>
+                            )}
                           </div>
+                          {maid.timestamp && (
+                            <Typography variant="body2" sx={{ 
+                              color: '#7c9473', 
+                              fontSize: '0.8rem', 
+                              mb: 1,
+                              fontStyle: 'italic'
+                            }}>
+                              Added {formatTimeAgo(maid.timestamp)}
+                            </Typography>
+                          )}
                           <Typography variant="body1" sx={{ textAlign: 'left', wordBreak: 'break-word', fontWeight: 'bold', mb: 1, display: 'flex', alignItems: 'center' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 4 }}>
                               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4 }}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 3v4M8 3v4M2 11h20"></path></svg>
