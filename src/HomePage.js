@@ -89,6 +89,7 @@ export default function HomePage({ onBack, userMobile }) {
   const [filterLocation, setFilterLocation] = useState('');
   const [filterStartTime, setFilterStartTime] = useState('');
   const [filterLiving, setFilterLiving] = useState('');
+  const [filterHired, setFilterHired] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [hiring, setHiring] = useState(false);
   const [currentUser, setCurrentUser] = useState({ phone: '', name: '' });
@@ -264,7 +265,11 @@ export default function HomePage({ onBack, userMobile }) {
     );
     
     const livingMatch = !filterLiving || (filterLiving === 'Yes' ? maid.living === 1 || maid.living === '1' : maid.living === 0 || maid.living === '0');
-    return workTypeMatch && locationMatch && startTimeMatch && livingMatch;
+    
+    // Hired filter: if checked, show only completely hired maids
+    const hiredMatch = !filterHired || isCompletelyHired(maid);
+    
+    return workTypeMatch && locationMatch && startTimeMatch && livingMatch && hiredMatch;
   });
   const searchLower = searchText.toLowerCase();
   const searchedMaids = filteredMaids.filter(maid => {
@@ -276,67 +281,112 @@ export default function HomePage({ onBack, userMobile }) {
   });
 
   return (
-    <Box sx={{ minHeight: '100vh', py: 4, background: 'linear-gradient(135deg, #f8fafc 0%, #e3f0e8 100%)' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#7c9473', letterSpacing: 1 }}>Maidfinder</Typography>
+    <Box sx={{ minHeight: '100vh', py: { xs: 2, sm: 4 }, px: { xs: 2, sm: 0 }, background: 'linear-gradient(135deg, #f8fafc 0%, #e3f0e8 100%)' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        mb: 3,
+        flexWrap: { xs: 'wrap', sm: 'nowrap' },
+        gap: { xs: 2, sm: 0 }
+      }}>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 700, 
+            color: '#7c9473', 
+            letterSpacing: 1,
+            fontSize: { xs: '1.8rem', sm: '2.125rem' } // Responsive font size
+          }}>
+            Maidfinder
+          </Typography>
           {currentUser.name && (
-            <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
+            <Typography variant="body2" sx={{ 
+              color: '#666', 
+              fontStyle: 'italic',
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }, // Responsive font size
+              wordBreak: 'break-word'
+            }}>
               Logged in as: {currentUser.name}
             </Typography>
           )}
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <Tooltip title={refreshing ? 'Refreshing...' : 'Refresh'}>
             <IconButton 
               sx={{ 
                 backgroundColor: '#7c9473', 
                 color: 'white', 
-                '&:hover': { backgroundColor: '#b2c9ab' },
+                '&:hover': { backgroundColor: '#5d7054' },
                 '&:disabled': { backgroundColor: '#e0e0e0' },
-                width: 40,
-                height: 40
+                width: { xs: 48, sm: 44 },  // Larger on mobile
+                height: { xs: 48, sm: 44 }, // Larger on mobile
+                borderRadius: 2,
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }} 
               onClick={handleRefresh}
               disabled={refreshing}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: refreshing ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
-                <polyline points="23 4 23 10 17 10"/>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              {/* Enhanced refresh icon with circular arrow */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" style={{ transform: refreshing ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.5s ease' }}>
+                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
               </svg>
             </IconButton>
           </Tooltip>
           <Tooltip title="Logout">
             <IconButton 
               sx={{ 
-                borderColor: '#7c9473', 
-                color: '#7c9473', 
-                border: '1px solid #7c9473',
+                backgroundColor: 'white', 
+                color: '#d32f2f', 
+                border: '2px solid #d32f2f',
                 '&:hover': { 
-                  borderColor: '#b2c9ab', 
-                  color: '#b2c9ab',
-                  backgroundColor: 'rgba(124, 148, 115, 0.1)'
+                  backgroundColor: '#d32f2f',
+                  color: 'white',
+                  borderColor: '#d32f2f'
                 },
-                width: 40,
-                height: 40
+                width: { xs: 48, sm: 44 },  // Larger on mobile
+                height: { xs: 48, sm: 44 }, // Larger on mobile
+                borderRadius: 2,
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }} 
               onClick={onBack}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
+              {/* Enhanced logout icon - exit door */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
               </svg>
             </IconButton>
           </Tooltip>
         </Box>
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', background: 'linear-gradient(90deg, #e3f0e8 0%, #f8fafc 100%)', borderRadius: 2, px: 2, py: 1, mb: 3, boxShadow: 1, maxWidth: 600, mx: 'auto', border: '1px solid #b2c9ab' }}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        background: 'linear-gradient(90deg, #e3f0e8 0%, #f8fafc 100%)', 
+        borderRadius: 2, 
+        px: { xs: 2, sm: 2 }, 
+        py: { xs: 1.5, sm: 1 }, 
+        mb: 3, 
+        boxShadow: 1, 
+        maxWidth: { xs: '100%', sm: 600 }, 
+        mx: 'auto', 
+        border: '1px solid #b2c9ab' 
+      }}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8, flexShrink: 0 }}>
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
         <input
           type="text"
           placeholder="Search by name, profession, or location..."
-          style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '1.1rem', width: '100%', color: '#4b6043' }}
+          style={{ 
+            border: 'none', 
+            outline: 'none', 
+            background: 'transparent', 
+            fontSize: window.innerWidth <= 600 ? '1rem' : '1.1rem', // Responsive font size
+            width: '100%', 
+            color: '#4b6043',
+            minHeight: '20px'
+          }}
           value={searchText}
           onChange={e => setSearchText(e.target.value)}
         />
@@ -364,6 +414,18 @@ export default function HomePage({ onBack, userMobile }) {
           />
           <label htmlFor="living-filter" style={{ fontSize: '14px', color: '#4b6043' }}>
             24-hour Live-in
+          </label>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 170 }}>
+          <input
+            type="checkbox"
+            id="hired-filter"
+            checked={filterHired}
+            onChange={e => setFilterHired(e.target.checked)}
+            style={{ marginRight: 8 }}
+          />
+          <label htmlFor="hired-filter" style={{ fontSize: '14px', color: '#4b6043' }}>
+            Show Hired Only
           </label>
         </Box>
       </Box>
