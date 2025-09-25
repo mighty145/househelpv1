@@ -1,0 +1,60 @@
+git config --unset-all http.https://github.com/.extraheader -ErrorAction SilentlyContinueWrite-Host "No extraheader to remove or command succeeded."
+
+johukoom.com
+maidfinder.com
+
+npm run build
+npm run deploy
+git add .
+git commit -m "Build: deploy frontend7 login fix"
+git push origin gh-pages
+https://github.com/mighty145/johukum.git
+
+
+20.255.186.2
+20.6.178.250
+20.247.40.166
+57.158.88.126
+20.255.214.77
+20.255.186.189
+4.144.60.19
+57.158.98.29
+4.144.47.145
+57.158.73.204
+20.6.146.193
+20.255.214.61
+20.247.41.243
+57.158.89.57 
+20.247.40.128
+20.239.242.116 
+20.239.237.193 
+20.187.233.165
+20.187.234.102
+20.6.178.126 
+20.187.235.70 
+20.255.185.214
+20.255.185.220 
+4.192.75.95 
+20.255.217.76 
+57.158.89.244 
+20.239.242.229 
+20.6.179.77
+20.255.187.90
+57.158.90.8
+20.189.109.97
+
+Driver={ODBC Driver 18 for SQL Server};Server=tcp:maidsfinder.database.windows.net,1433;Database=maids;Uid=maidsfinder;Pwd=Never@01;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;
+INSERT INTO maid (phone, name, workType, startTime, endTime, location, living, photoPath, remarks, feedback, available, Gender)
+VALUES ('8707609785', 'Pooja', 'Maid', '08:00', '21:00', 'Magarpatta', 0, '', '', '', 1, 'Female');
+
+INSERT INTO maid (phone, name, workType, startTime, endTime, location, living, photoPath, remarks, feedback, available, Gender)
+VALUES ('9146011017', 'Sonika amol mhetre', 'Any work', '08:00', '21:00', 'Magarpatta', 0, '', '', '', 1, 'Female');
+
+INSERT INTO maid (phone, name, workType, startTime, endTime, location, living, photoPath, remarks, feedback, available, Gender)
+VALUES ('7248900079', 'Ismail sayyad', 'Security', '09:00', '18:00', 'Magarpatta', 0, '', '', '', 1, 'Male');
+
+INSERT INTO maid (phone, name, workType, startTime, endTime, location, living, photoPath, remarks, feedback, available, Gender)
+VALUES ('7083202973', 'Samina', 'Nanny', '10:00', '18:00', 'Magarpatta', 0, '', '', '', 1, 'Female');
+
+INSERT INTO maid (phone, name, workType, startTime, endTime, location, living, photoPath, remarks, feedback, available, Gender)
+VALUES ('8208713744', 'Archana Koli', 'Maid', '08:00', '17:00', 'Magarpatta', 0, '', '', '', 1, 'Female');
