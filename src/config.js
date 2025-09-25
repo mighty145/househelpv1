@@ -4,7 +4,7 @@ const getApiBaseUrl = () => {
   // Check if we're running in production
   if (process.env.NODE_ENV === 'production') {
     // Use production API endpoint - your deployed Azure backend URL
-    const prodUrl = process.env.REACT_APP_API_URL || 'https://maidbackend-emd3gd5ae6eghaf0.eastasia-01.azurewebsites.net';
+    const prodUrl = process.env.REACT_APP_API_URL || 'https://maidbackend-evd3fgfpf3a4fje0.eastasia-01.azurewebsites.net';
     console.log('Production mode - using API URL:', prodUrl);
     return prodUrl;
   }
