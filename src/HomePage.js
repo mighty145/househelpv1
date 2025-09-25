@@ -119,15 +119,35 @@ export default function HomePage({ onBack }) {
     fetchMaids();
   }, []);
 
-  const workTypeOptions = Array.from(new Set(maids.flatMap(m => (m.workType ? m.workType.split(',') : [])))).filter(Boolean);
-  const locationOptions = Array.from(new Set(maids.flatMap(m => (m.location ? m.location.split(',') : [])))).filter(Boolean);
-  const startTimeOptions = Array.from(new Set(maids.map(m => m.startTime).filter(Boolean)));
-  const endTimeOptions = Array.from(new Set(maids.map(m => m.endTime).filter(Boolean)));
+  const workTypeOptions = Array.from(new Set(maids.flatMap(m => (m.workType ? m.workType.split(',').map(w => w.trim()) : [])))).filter(Boolean);
+  const locationOptions = Array.from(new Set(maids.flatMap(m => (m.location ? m.location.split(',').map(l => l.trim()) : [])))).filter(Boolean);
+  const startTimeOptions = Array.from(new Set(
+    maids.flatMap(m => {
+      if (m.timeSlots && m.timeSlots.length > 0) {
+        return m.timeSlots.map(slot => slot.startTime);
+      }
+      return m.startTime ? [m.startTime] : [];
+    }).filter(Boolean)
+  ));
+  const endTimeOptions = Array.from(new Set(
+    maids.flatMap(m => {
+      if (m.timeSlots && m.timeSlots.length > 0) {
+        return m.timeSlots.map(slot => slot.endTime);
+      }
+      return m.endTime ? [m.endTime] : [];
+    }).filter(Boolean)
+  ));
 
   const filteredMaids = maids.filter(maid => {
     const workTypeMatch = !filterWorkType || (maid.workType && maid.workType.split(',').map(w => w.trim()).includes(filterWorkType));
     const locationMatch = !filterLocation || (maid.location && maid.location.split(',').map(l => l.trim()).includes(filterLocation));
-    const startTimeMatch = !filterStartTime || maid.startTime === filterStartTime;
+    
+    // Updated startTime matching to check both timeSlots and fallback to legacy startTime
+    const startTimeMatch = !filterStartTime || (
+      (maid.timeSlots && maid.timeSlots.length > 0 && maid.timeSlots.some(slot => slot.startTime === filterStartTime)) ||
+      ((!maid.timeSlots || maid.timeSlots.length === 0) && maid.startTime === filterStartTime)
+    );
+    
     const livingMatch = !filterLiving || (filterLiving === 'Yes' ? maid.living === 1 || maid.living === '1' : maid.living === 0 || maid.living === '0');
     return workTypeMatch && locationMatch && startTimeMatch && livingMatch;
   });
@@ -320,7 +340,7 @@ export default function HomePage({ onBack }) {
                                   </Button>
                                 </Box>
                               ))
-                            ) : (
+                            ) : (maid.startTime && maid.endTime) ? (
                               <Box sx={{ 
                                 display: 'flex',
                                 alignItems: 'center',
@@ -330,7 +350,18 @@ export default function HomePage({ onBack }) {
                                 width: '100%'
                               }}>
                                 <Typography variant="body2" sx={{ color: '#4b6043', flex: 1 }}>
-                                  {maid.startTime || ''} to {maid.endTime || ''}
+                                  <span style={{ 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    marginRight: 6,
+                                    minWidth: '16px'
+                                  }}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <circle cx="12" cy="12" r="10"/>
+                                      <polyline points="12,6 12,12 16,14"/>
+                                    </svg>
+                                  </span>
+                                  {maid.startTime} to {maid.endTime}
                                 </Typography>
                                 <Button
                                   variant="contained"
@@ -344,11 +375,15 @@ export default function HomePage({ onBack }) {
                                     ml: 2
                                   }}
                                   onClick={() => handleHire(maid.phone, 0)}
-                                  disabled={hiring || (maid.timeSlots && maid.timeSlots[0] && maid.timeSlots[0].hired === 1)}
+                                  disabled={hiring}
                                 >
-                                  {hiring ? 'Hiring...' : (maid.timeSlots && maid.timeSlots[0] && maid.timeSlots[0].hired === 1 ? 'HIRED' : 'HIRE')}
+                                  {hiring ? 'Hiring...' : 'HIRE'}
                                 </Button>
                               </Box>
+                            ) : (
+                              <Typography variant="body2" sx={{ color: '#9e9e9e', ml: 1 }}>
+                                No availability information
+                              </Typography>
                             )}
                             
                             {(maid.anywhere === true || maid.anywhere === 1 || maid.living === 1) && (
