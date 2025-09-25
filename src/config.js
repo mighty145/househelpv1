@@ -3,8 +3,8 @@
 const getApiBaseUrl = () => {
   // Check if we're running in production
   if (process.env.NODE_ENV === 'production') {
-    // Use production API endpoint - update this with your Azure backend URL
-    return process.env.REACT_APP_API_URL || 'https://your-backend-app.azurewebsites.net';
+    // Use production API endpoint - your deployed Azure backend URL
+    return process.env.REACT_APP_API_URL || 'https://maidbackend-emd3gd5ae6eghaf0.eastasia-01.azurewebsites.net';
   }
   
   // Check if we're running on localhost
