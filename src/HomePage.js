@@ -89,7 +89,7 @@ export default function HomePage({ onBack, userMobile }) {
   const [filterLocation, setFilterLocation] = useState('');
   const [filterStartTime, setFilterStartTime] = useState('');
   const [filterLiving, setFilterLiving] = useState('');
-  const [filterHired, setFilterHired] = useState(false);
+  const [filterAvailable, setFilterAvailable] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [hiring, setHiring] = useState(false);
   const [currentUser, setCurrentUser] = useState({ phone: '', name: '' });
@@ -103,6 +103,12 @@ export default function HomePage({ onBack, userMobile }) {
     if (!currentUser.phone || !currentUser.name) {
       alert('User information not available. Please refresh the page and try again.');
       return;
+    }
+    
+    // Confirmation dialog before hiring
+    const confirmHire = window.confirm('Are you sure you want to hire this time slot?');
+    if (!confirmHire) {
+      return; // User cancelled, exit without hiring
     }
     
     setHiring(true);
@@ -266,10 +272,10 @@ export default function HomePage({ onBack, userMobile }) {
     
     const livingMatch = !filterLiving || (filterLiving === 'Yes' ? maid.living === 1 || maid.living === '1' : maid.living === 0 || maid.living === '0');
     
-    // Hired filter: if checked, show only completely hired maids
-    const hiredMatch = !filterHired || isCompletelyHired(maid);
+    // Available filter: if checked, show only available maids (not completely hired)
+    const availableMatch = !filterAvailable || !isCompletelyHired(maid);
     
-    return workTypeMatch && locationMatch && startTimeMatch && livingMatch && hiredMatch;
+    return workTypeMatch && locationMatch && startTimeMatch && livingMatch && availableMatch;
   });
   const searchLower = searchText.toLowerCase();
   const searchedMaids = filteredMaids.filter(maid => {
@@ -419,13 +425,13 @@ export default function HomePage({ onBack, userMobile }) {
         <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 170 }}>
           <input
             type="checkbox"
-            id="hired-filter"
-            checked={filterHired}
-            onChange={e => setFilterHired(e.target.checked)}
+            id="available-filter"
+            checked={filterAvailable}
+            onChange={e => setFilterAvailable(e.target.checked)}
             style={{ marginRight: 8 }}
           />
-          <label htmlFor="hired-filter" style={{ fontSize: '14px', color: '#4b6043' }}>
-            Show Hired Only
+          <label htmlFor="available-filter" style={{ fontSize: '14px', color: '#4b6043' }}>
+            Show Available Only
           </label>
         </Box>
       </Box>
