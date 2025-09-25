@@ -116,7 +116,7 @@ function App() {
           />
         )}
         {role === 'owner' && !showOwnerForm && loggedIn && (
-          <HomePage onBack={handleLogout} />
+          <HomePage onBack={handleLogout} userMobile={userMobile} />
         )}
         {role === 'owner' && showOwnerForm && <OwnerForm onBack={() => { setRole(null); setShowOwnerForm(false); }} />}
       </Paper>

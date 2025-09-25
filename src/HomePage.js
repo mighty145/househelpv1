@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardContent, Avatar, Grid, Box, Button, Typography, TextField, IconButton, Tooltip } from '@mui/material';
 import { API_BASE_URL } from './config';
 
@@ -82,7 +82,7 @@ function ConnectButton({ maid, disabled = false }) {
   );
 }
 
-export default function HomePage({ onBack }) {
+export default function HomePage({ onBack, userMobile }) {
   const [searchText, setSearchText] = useState('');
   const [maids, setMaids] = useState([]);
   const [filterWorkType, setFilterWorkType] = useState('');
@@ -91,10 +91,16 @@ export default function HomePage({ onBack }) {
   const [filterLiving, setFilterLiving] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [hiring, setHiring] = useState(false);
+  const [currentUser, setCurrentUser] = useState({ phone: '', name: '' });
 
   const handleHire = async (maidPhone, slotIndex = 0) => {
     if (!maidPhone) {
-      alert('Phone number not available');
+      alert('Maid phone number not available');
+      return;
+    }
+    
+    if (!currentUser.phone || !currentUser.name) {
+      alert('User information not available. Please refresh the page and try again.');
       return;
     }
     
@@ -107,14 +113,16 @@ export default function HomePage({ onBack }) {
         },
         body: JSON.stringify({ 
           phone: maidPhone,
-          slotIndex: slotIndex + 1 // Send 1-based index to match database columns
+          slotIndex: slotIndex + 1, // Send 1-based index to match database columns
+          hirerPhone: currentUser.phone,
+          hirerName: currentUser.name
         }),
       });
       
       const data = await response.json();
       
       if (response.ok) {
-        alert(`Time slot ${slotIndex + 1} hired successfully! This slot is no longer available.`);
+        alert(`Time slot ${slotIndex + 1} hired successfully by ${currentUser.name}! This slot is no longer available.`);
         // Refresh the maid list instead of reloading the page
         await fetchMaids();
       } else {
@@ -193,9 +201,38 @@ export default function HomePage({ onBack }) {
     setRefreshing(false);
   };
 
+  // Fetch current user details
+  const fetchUserDetails = async () => {
+    if (!userMobile) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/owners/details`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: userMobile }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.status === 'success') {
+        setCurrentUser({
+          phone: data.owner.phone,
+          name: data.owner.name
+        });
+      } else {
+        console.error('Failed to fetch user details:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
+
   React.useEffect(() => {
     fetchMaids();
-  }, []);
+    fetchUserDetails();
+  }, [userMobile]);
 
   const workTypeOptions = Array.from(new Set(maids.flatMap(m => (m.workType ? m.workType.split(',').map(w => w.trim()) : [])))).filter(Boolean);
   const locationOptions = Array.from(new Set(maids.flatMap(m => (m.location ? m.location.split(',').map(l => l.trim()) : [])))).filter(Boolean);
@@ -241,7 +278,14 @@ export default function HomePage({ onBack }) {
   return (
     <Box sx={{ minHeight: '100vh', py: 4, background: 'linear-gradient(135deg, #f8fafc 0%, #e3f0e8 100%)' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, color: '#7c9473', letterSpacing: 1 }}>Maidfinder</Typography>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: '#7c9473', letterSpacing: 1 }}>Maidfinder</Typography>
+          {currentUser.name && (
+            <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
+              Logged in as: {currentUser.name}
+            </Typography>
+          )}
+        </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title={refreshing ? 'Refreshing...' : 'Refresh'}>
             <IconButton 
