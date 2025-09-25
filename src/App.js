@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Container, Typography, Box, Paper } from '@mui/material';
 import MaidForm from './MaidForm';
 import OwnerForm from './OwnerForm';
@@ -10,6 +10,38 @@ function App() {
   const [role, setRole] = useState(null);
   const [showOwnerForm, setShowOwnerForm] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [userMobile, setUserMobile] = useState('');
+
+  // Check localStorage on app initialization
+  useEffect(() => {
+    const savedLoginState = localStorage.getItem('househelp_login_state');
+    const savedUserMobile = localStorage.getItem('househelp_user_mobile');
+    
+    if (savedLoginState === 'true' && savedUserMobile) {
+      setLoggedIn(true);
+      setUserMobile(savedUserMobile);
+      setRole('owner');
+    }
+  }, []);
+
+  // Handle successful login
+  const handleLogin = (mobile) => {
+    setLoggedIn(true);
+    setUserMobile(mobile);
+    // Save login state to localStorage
+    localStorage.setItem('househelp_login_state', 'true');
+    localStorage.setItem('househelp_user_mobile', mobile);
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    setLoggedIn(false);
+    setUserMobile('');
+    setRole(null);
+    // Clear login state from localStorage
+    localStorage.removeItem('househelp_login_state');
+    localStorage.removeItem('househelp_user_mobile');
+  };
 
   return (
     <Container maxWidth="sm" style={{ marginTop: 40 }}>
@@ -78,13 +110,13 @@ function App() {
         {role === 'maid' && <MaidForm onBack={() => setRole(null)} />}
         {role === 'owner' && !showOwnerForm && !loggedIn && (
           <Login
-            onLogin={() => setLoggedIn(true)}
+            onLogin={handleLogin}
             onRegister={() => setShowOwnerForm(true)}
             onBack={() => setRole(null)}
           />
         )}
         {role === 'owner' && !showOwnerForm && loggedIn && (
-          <HomePage onBack={() => { setLoggedIn(false); setRole(null); }} />
+          <HomePage onBack={handleLogout} />
         )}
         {role === 'owner' && showOwnerForm && <OwnerForm onBack={() => { setRole(null); setShowOwnerForm(false); }} />}
       </Paper>

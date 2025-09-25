@@ -43,7 +43,7 @@ export default function Login({ onLogin, onRegister, onBack }) {
       
       if (result.status === 'success' && result.registered) {
         console.log('User is registered, proceeding to login');
-        // User is registered, trigger the login callback immediately
+        // User is registered, trigger the login callback immediately with mobile number
         onLogin && onLogin(mobile);
       } else {
         console.log('User not registered');

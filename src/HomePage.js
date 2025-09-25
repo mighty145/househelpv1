@@ -1,9 +1,39 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardContent, Avatar, Grid, Box, Button, Typography, TextField } from '@mui/material';
+import { Card, CardHeader, CardContent, Avatar, Grid, Box, Button, Typography, TextField, IconButton, Tooltip } from '@mui/material';
 import { API_BASE_URL } from './config';
 
-function ConnectButton({ maid }) {
+function ConnectButton({ maid, disabled = false }) {
   const [showPhone, setShowPhone] = useState(false);
+
+  if (disabled) {
+    return (
+      <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        <Button 
+          variant="contained" 
+          disabled
+          sx={{ 
+            mt: 1, 
+            mb: 0, 
+            minWidth: 0, 
+            width: 'auto', 
+            px: 2,
+            backgroundColor: '#e0e0e0',
+            color: '#9e9e9e'
+          }}
+        >
+          Fully Hired
+        </Button>
+        <Typography variant="body2" sx={{ 
+          color: '#9e9e9e', 
+          fontSize: '0.75rem', 
+          mt: 0.5,
+          fontStyle: 'italic'
+        }}>
+          All time slots are hired
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -146,6 +176,17 @@ export default function HomePage({ onBack }) {
     return days === 1 ? '1 day ago' : `${days} days ago`;
   };
 
+  // Helper function to check if all time slots are hired (maid is completely unavailable)
+  const isCompletelyHired = (maid) => {
+    if (!maid.timeSlots || maid.timeSlots.length === 0) {
+      // If no timeSlots, maid is not hired
+      return false;
+    }
+    
+    // Check if ALL time slots are hired
+    return maid.timeSlots.every(slot => slot.hired === 1);
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchMaids();
@@ -201,23 +242,49 @@ export default function HomePage({ onBack }) {
     <Box sx={{ minHeight: '100vh', py: 4, background: 'linear-gradient(135deg, #f8fafc 0%, #e3f0e8 100%)' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, color: '#7c9473', letterSpacing: 1 }}>Maidfinder</Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button 
-            variant="contained" 
-            sx={{ 
-              backgroundColor: '#7c9473', 
-              color: 'white', 
-              '&:hover': { backgroundColor: '#b2c9ab' },
-              '&:disabled': { backgroundColor: '#e0e0e0' }
-            }} 
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
-          <Button variant="outlined" sx={{ borderColor: '#7c9473', color: '#7c9473', '&:hover': { borderColor: '#b2c9ab', color: '#b2c9ab' } }} onClick={onBack}>
-            Logoff
-          </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Tooltip title={refreshing ? 'Refreshing...' : 'Refresh'}>
+            <IconButton 
+              sx={{ 
+                backgroundColor: '#7c9473', 
+                color: 'white', 
+                '&:hover': { backgroundColor: '#b2c9ab' },
+                '&:disabled': { backgroundColor: '#e0e0e0' },
+                width: 40,
+                height: 40
+              }} 
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: refreshing ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Logout">
+            <IconButton 
+              sx={{ 
+                borderColor: '#7c9473', 
+                color: '#7c9473', 
+                border: '1px solid #7c9473',
+                '&:hover': { 
+                  borderColor: '#b2c9ab', 
+                  color: '#b2c9ab',
+                  backgroundColor: 'rgba(124, 148, 115, 0.1)'
+                },
+                width: 40,
+                height: 40
+              }} 
+              onClick={onBack}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', background: 'linear-gradient(90deg, #e3f0e8 0%, #f8fafc 100%)', borderRadius: 2, px: 2, py: 1, mb: 3, boxShadow: 1, maxWidth: 600, mx: 'auto', border: '1px solid #b2c9ab' }}>
@@ -272,12 +339,17 @@ export default function HomePage({ onBack }) {
                 flexDirection: 'row',
                 alignItems: 'flex-start',
                 position: 'relative',
-                background: isNewMaid(maid.timestamp) 
-                  ? 'linear-gradient(120deg, #fff9c4 0%, #f0f8e8 100%)' // Highlight new entries
-                  : 'linear-gradient(120deg, #f7fbe7 0%, #e3f0e8 100%)',
-                border: isNewMaid(maid.timestamp) 
-                  ? '2px solid #ffd700' // Gold border for new entries
-                  : '1px solid #b2c9ab',
+                background: isCompletelyHired(maid)
+                  ? 'linear-gradient(120deg, #f5f5f5 0%, #e8e8e8 100%)' // Gray background for fully hired
+                  : isNewMaid(maid.timestamp) 
+                    ? 'linear-gradient(120deg, #fff9c4 0%, #f0f8e8 100%)' // Highlight new entries
+                    : 'linear-gradient(120deg, #f7fbe7 0%, #e3f0e8 100%)', // Default
+                border: isCompletelyHired(maid)
+                  ? '1px solid #bdbdbd' // Gray border for fully hired
+                  : isNewMaid(maid.timestamp) 
+                    ? '2px solid #ffd700' // Gold border for new entries
+                    : '1px solid #b2c9ab', // Default border
+                opacity: isCompletelyHired(maid) ? 0.7 : 1, // Slightly fade fully hired cards
               }}>
                 <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 2 }}>
                   {maid.photoPath ? (
@@ -314,6 +386,22 @@ export default function HomePage({ onBack }) {
                                 alignItems: 'center'
                               }}>
                                 ✨ NEW
+                              </Box>
+                            )}
+                            {isCompletelyHired(maid) && (
+                              <Box sx={{ 
+                                ml: 1, 
+                                px: 1, 
+                                py: 0.2, 
+                                backgroundColor: '#757575', 
+                                color: 'white', 
+                                borderRadius: 1, 
+                                fontSize: '0.7rem',
+                                fontWeight: 'bold',
+                                display: 'inline-flex',
+                                alignItems: 'center'
+                              }}>
+                                🚫 FULLY HIRED
                               </Box>
                             )}
                           </div>
@@ -463,7 +551,7 @@ export default function HomePage({ onBack }) {
                             )}
                           </Box>
                           <Box sx={{ width: '100%', mt: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <ConnectButton maid={maid} />
+                            <ConnectButton maid={maid} disabled={isCompletelyHired(maid)} />
                           </Box>
                         </div>
                       </>

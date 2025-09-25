@@ -4,7 +4,7 @@ import { API_BASE_URL } from './config';
 
 const workTypes = [
   'Maid',
-  'Baby care',
+  'Nanny',
   'Cook',
   'Driver',
   'Patient care',
@@ -14,12 +14,12 @@ const workTypes = [
 
 
 const startTimes = [
-  '5:00 AM','6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-  '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM',
+  '05:00 AM','06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+  '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM',
 ];
 const endTimes = [
-  '6:00 AM','7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-  '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM',
+  '06:00 AM','07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+  '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM',
   '10:00 PM', '11:00 PM', '24 hours',
 ];
 
@@ -32,7 +32,7 @@ function MaidForm({ onBack }) {
     workType: ['Maid'],
     location: ['Magarpatta'],
     timeSlots: [
-      { startTime: '7:00 AM', endTime: '8:00 AM' }
+      { startTime: '06:00 AM', endTime: '07:00 AM' }
     ],
     anywhere: false,
     photo: null,
@@ -64,7 +64,7 @@ function MaidForm({ onBack }) {
     if (form.timeSlots.length < 4) {
       setForm((prev) => ({
         ...prev,
-        timeSlots: [...prev.timeSlots, { startTime: '7:00 AM', endTime: '8:00 AM' }]
+        timeSlots: [...prev.timeSlots, { startTime: '06:00 AM', endTime: '07:00 AM' }]
       }));
     }
   };
@@ -129,7 +129,7 @@ function MaidForm({ onBack }) {
           workType: [],
           location: [],
           timeSlots: [
-            { startTime: '7:00 AM', endTime: '8:00 AM' }
+            { startTime: '06:00 AM', endTime: '07:00 AM' }
           ],
           anywhere: false,
           photo: null,
