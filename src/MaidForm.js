@@ -10,6 +10,8 @@ const workTypes = [
   'Patient care',
   'Bathroom cleaning',
   'Baby massager',
+  'Mehendi Artist',
+  'Autowala',
   'Other',
 ];
 
