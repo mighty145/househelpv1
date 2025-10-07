@@ -9,6 +9,7 @@ const workTypes = [
   'Driver',
   'Patient care',
   'Bathroom cleaning',
+  'Baby massager',
   'Other',
 ];
 
