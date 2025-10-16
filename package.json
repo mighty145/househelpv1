@@ -20,7 +20,7 @@
     "postbuild": "node scripts/copy-to-docs.js",
     "deploy": "echo \"Built into docs/ — commit and push to main to publish.\""
   },
-  "homepage": "https://mighty145.github.io/househelpv1",
+  "homepage": ".",
   "repository": {
     "type": "git",
     "url": "https://github.com/mighty145/househelpv1.git"
