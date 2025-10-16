@@ -1,0 +1,88 @@
+import React, { useState } from 'react';
+import { Button, TextField, MenuItem, Checkbox, FormControlLabel, Typography, Box, InputLabel, Select, FormControl, Slider } from '@mui/material';
+import { API_BASE_URL } from './config';
+
+const workTypes = [
+  'Maid',
+  'Nanny',
+  'Cook',
+  'Driver',
+  'Patient care',
+  'Bathroom cleaning',
+  'Baby massager',
+  'Mehendi Artist',
+  'Autowala',
+  'Other',
+];
+
+const startTimes = [
+  '05:00 AM','06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+  '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM',
+];
+
+const endTimes = [
+  '06:00 AM','07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+  '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM',
+  '10:00 PM', '11:00 PM', '24 hours',
+];
+
+function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpdateMode, phoneReadOnly }) {
+  const defaultForm = {
+    name: '',
+    phone: '',
+    gender: 'Female',
+    workType: ['Maid'],
+    location: ['Magarpatta'],
+    timeSlots: [{ startTime: '06:00 AM', endTime: '07:00 AM' }],
+    anywhere: false,
+    photo: null,
+    remarks: '',
+    feedback: '',
+    available: 1
+  };
+
+  const processInitialData = () => {
+    if (!initialData) return defaultForm;
+
+    let workType = ['Maid'];
+    if (initialData.work_type) {
+      workType = typeof initialData.work_type === 'string' ? 
+        initialData.work_type.split(',').filter(Boolean) : 
+        Array.isArray(initialData.work_type) ? initialData.work_type : ['Maid'];
+    }
+
+    let location = ['Magarpatta'];
+    if (initialData.address) {
+      location = typeof initialData.address === 'string' ? 
+        initialData.address.split(',').filter(Boolean) : 
+        Array.isArray(initialData.address) ? initialData.address : ['Magarpatta'];
+    }
+
+    let timeSlots = defaultForm.timeSlots;
+    if (Array.isArray(initialData.available_slots)) {
+      timeSlots = initialData.available_slots.map(slot => ({
+        startTime: slot.start_time || '06:00 AM',
+        endTime: slot.end_time || '07:00 AM'
+      }));
+    }
+
+    return {
+      name: initialData.name || '',
+      phone: initialData.phone || '',
+      gender: initialData.gender || 'Female',
+      workType,
+      location,
+      timeSlots,
+      anywhere: Boolean(initialData.live_in_24hrs),
+      photo: initialData.photo || null,
+      remarks: initialData.remarks || '',
+      feedback: initialData.feedback || '',
+      available: initialData.available ?? 1
+    };
+  };
+
+  const [form, setForm] = useState(processInitialData);
+  const [photoMsg, setPhotoMsg] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+
+  // Rest of your component code...

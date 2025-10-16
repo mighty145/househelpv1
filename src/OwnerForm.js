@@ -9,6 +9,19 @@ function OwnerForm({ onBack }) {
     phone: '',
   });
   const [loading, setLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+
+  const validatePhone = (phone) => {
+    if (phone.length === 0) {
+      setPhoneError('');
+    } else if (phone.length !== 10) {
+      setPhoneError('Phone number must be 10 digits');
+    } else if (!/^\d{10}$/.test(phone)) {
+      setPhoneError('Phone number must contain only digits');
+    } else {
+      setPhoneError('');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,6 +31,7 @@ function OwnerForm({ onBack }) {
       const numericValue = value.replace(/[^0-9]/g, '');
       if (numericValue.length <= 10) {
         setForm((prev) => ({ ...prev, [name]: numericValue }));
+        validatePhone(numericValue);
       }
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
@@ -52,12 +66,26 @@ function OwnerForm({ onBack }) {
         body: JSON.stringify(form)
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
       const result = await response.json();
       console.log('Registration response:', result);
+
+      if (!response.ok) {
+        console.log('Error details:', {
+          status: response.status,
+          result: result
+        });
+
+        // Check for Conflict (409) status or existence messages
+        if (response.status === 409 || 
+            result.Message?.includes('already exists') || 
+            result.message?.includes('already exists') ||
+            result.error?.includes('already exists') ||
+            result.code === 'Conflict') {
+          alert('This mobile number is already registered. Please use a different number or try logging in.');
+          return;
+        }
+        throw new Error(result.Message || result.message || result.error || `Registration failed with status: ${response.status}`);
+      }
       
       if (result.status === 'success') {
         alert('Registration successful!');
@@ -67,7 +95,13 @@ function OwnerForm({ onBack }) {
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert(`Error submitting form: ${error.message}. Please try again.`);
+      // Check error message for conflict/duplicate indicators
+      if (error.message?.includes('already exists') || 
+          error.message?.includes('Conflict')) {
+        alert('This mobile number is already registered. Please use a different number or try logging in.');
+      } else {
+        alert('Unable to complete registration. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
@@ -105,15 +139,16 @@ function OwnerForm({ onBack }) {
         margin="normal" 
         required 
         disabled={loading}
+        error={!!phoneError}
         inputProps={{ maxLength: 10 }}
-        helperText={form.phone.length > 0 ? `${form.phone.length}/10 digits` : 'Enter 10 digit mobile number'}
+        helperText={phoneError || (form.phone.length > 0 ? `${form.phone.length}/10 digits` : 'Enter 10 digit mobile number')}
       />
       <Button 
         variant="contained" 
         color="primary" 
         type="submit" 
         fullWidth
-        disabled={loading}
+        disabled={loading || !!phoneError || form.phone.length !== 10}
         style={{ marginTop: 16 }}
       >
         {loading ? 'REGISTERING...' : 'SUBMIT'}
