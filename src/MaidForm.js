@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, TextField, MenuItem, Checkbox, FormControlLabel, Typography, Box, InputLabel, Select, FormControl, Slider, CircularProgress } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { API_BASE_URL } from './config';
 
 // We'll fetch work types and locations from the backend options endpoint.
@@ -25,6 +27,8 @@ const endTimes = [
 
 
 function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpdateMode, phoneReadOnly }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   // Helper functions for custom fields
   function getFinalWorkType(form, customWorkType) {
     if (form.workType.includes('Other') && customWorkType.trim()) {
@@ -226,20 +230,23 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
   };
 
   const handleTimeRangeChange = (index, newRange) => {
-    const [startMinutes, endMinutes] = newRange;
-    
+    let [startMinutes, endMinutes] = newRange;
+    // Allow thumbs to move freely, swap if needed
+    if (startMinutes > endMinutes) {
+      [startMinutes, endMinutes] = [endMinutes, startMinutes];
+    }
+    // Prevent zero-length slot
+    if (startMinutes === endMinutes) return;
     // Check for overlaps with other slots
     if (checkTimeSlotOverlap(form.timeSlots, index, startMinutes, endMinutes)) {
       // Don't update if there's an overlap - user will see visual feedback
       return;
     }
-    
     const startTime = minutesToTime(startMinutes);
     const endTime = minutesToTime(endMinutes);
-    
     setForm((prev) => ({
       ...prev,
-      timeSlots: prev.timeSlots.map((slot, i) => 
+      timeSlots: prev.timeSlots.map((slot, i) =>
         i === index ? { ...slot, startTime, endTime } : slot
       )
     }));
@@ -418,10 +425,10 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
   };
 
   return (
-    <Box sx={{ padding: 3 }}>
+    <Box sx={{ padding: isMobile ? 1 : 3 }}>
       <form onSubmit={handleSubmit}>
-        <Typography variant="h6" gutterBottom>Maid Registration</Typography>
-      <TextField label="Name" name="name" value={form.name} onChange={handleChange} fullWidth margin="normal" required />
+        <Typography variant={isMobile ? "body1" : "h6"} gutterBottom>Maid Registration</Typography>
+      <TextField label="Name" name="name" value={form.name} onChange={handleChange} fullWidth margin="normal" required size={isMobile ? "small" : "medium"} />
       <TextField 
         label="Phone number (10 digits)" 
         name="phone" 
@@ -440,8 +447,9 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
           pattern: '[0-9]*',
           maxLength: 10
         }}
+        size={isMobile ? "small" : "medium"}
       />
-      <FormControl fullWidth margin="normal">
+  <FormControl fullWidth margin="normal" size={isMobile ? "small" : "medium"}>
         <InputLabel id="gender-label">Gender</InputLabel>
         <Select
           labelId="gender-label"
@@ -454,7 +462,7 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
           <MenuItem value="Other">Other</MenuItem>
         </Select>
       </FormControl>
-      <FormControl fullWidth margin="normal">
+  <FormControl fullWidth margin="normal" size={isMobile ? "small" : "medium"}>
         <InputLabel>Type of work</InputLabel>
         <Select
           multiple
@@ -478,21 +486,43 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
               onChange={e => setCustomWorkType(e.target.value)}
               fullWidth
               margin="normal"
+              size={isMobile ? "small" : "medium"}
             />
           )}
       
       {/* Dynamic Time Slots */}
       <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>Available Time Slots</Typography>
       {form.timeSlots.map((slot, index) => {
+        // Helper to find earliest available free slot
+        function getEarliestFreeSlot() {
+          const slotDuration = timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime);
+          const minStart = 300; // 5:00 AM
+          const maxEnd = 1320; // 10:00 PM
+          for (let start = minStart; start + slotDuration <= maxEnd; start += 30) {
+            const end = start + slotDuration;
+            // Check overlap with other slots
+            const overlaps = form.timeSlots.some((s, i) => {
+              if (i === index) return false;
+              const sStart = timeToMinutes(s.startTime);
+              const sEnd = timeToMinutes(s.endTime);
+              return (start < sEnd && end > sStart);
+            });
+            if (!overlaps) {
+              return [start, end];
+            }
+          }
+          return [timeToMinutes(slot.startTime), timeToMinutes(slot.endTime)]; // fallback
+        }
         const startMinutes = timeToMinutes(slot.startTime);
         const endMinutes = timeToMinutes(slot.endTime);
         const hasOverlap = checkTimeSlotOverlap(form.timeSlots, index, startMinutes, endMinutes);
-        
+        // Always allow slider to move anywhere in the range
+        const sliderValue = [startMinutes, endMinutes];
         return (
-          <Box key={index} sx={{ 
-            mb: 3, 
-            p: 2, 
-            border: hasOverlap ? '2px solid #f44336' : '1px solid #e0e0e0', 
+          <Box key={index} sx={{
+            mb: 3,
+            p: 2,
+            border: hasOverlap ? '2px solid #f44336' : '1px solid #e0e0e0',
             borderRadius: 2,
             backgroundColor: hasOverlap ? '#ffebee' : 'transparent'
           }}>
@@ -501,31 +531,57 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
                 Time Slot {index + 1}
               </Typography>
               {form.timeSlots.length > 1 && (
-                <Button 
-                  variant="outlined" 
-                  color="error" 
-                  size="small" 
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
                   onClick={() => removeTimeSlot(index)}
                   sx={{ minWidth: 'auto', px: 1 }}
                 >
                   Remove
                 </Button>
               )}
+              <Button
+                variant="outlined"
+                color="primary"
+                size="small"
+                onClick={() => {
+                  const [start, end] = getEarliestFreeSlot();
+                  handleTimeRangeChange(index, [start, end]);
+                }}
+                sx={{ minWidth: 'auto', px: 1, ml: 1 }}
+              >
+                Earliest Free Slot
+              </Button>
             </Box>
-            
             {hasOverlap && (
               <Typography variant="caption" sx={{ color: '#f44336', mb: 1, display: 'block' }}>
                 ⚠️ This time slot overlaps with another slot
               </Typography>
             )}
-            
             <Box sx={{ px: 1 }}>
               <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
                 Select time range: {slot.startTime} - {slot.endTime}
               </Typography>
               <Slider
-                value={[startMinutes, endMinutes]}
-                onChange={(event, newValue) => handleTimeRangeChange(index, newValue)}
+                value={sliderValue}
+                onChange={(event, newValue) => {
+                  // Always allow thumbs to move anywhere, update only if valid
+                  let [start, end] = newValue;
+                  if (start > end) [start, end] = [end, start];
+                  // Prevent zero-length slot
+                  if (start === end) return;
+                  // Check for overlaps
+                  const overlaps = form.timeSlots.some((s, i) => {
+                    if (i === index) return false;
+                    const sStart = timeToMinutes(s.startTime);
+                    const sEnd = timeToMinutes(s.endTime);
+                    return (start < sEnd && end > sStart);
+                  });
+                  if (!overlaps) {
+                    handleTimeRangeChange(index, [start, end]);
+                  }
+                }}
                 valueLabelDisplay="auto"
                 valueLabelFormat={(value) => minutesToTime(value)}
                 min={300} // 5:00 AM
@@ -602,6 +658,7 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
               onChange={e => setCustomLocation(e.target.value)}
               fullWidth
               margin="normal"
+              size={isMobile ? "small" : "medium"}
             />
           )}
 
@@ -614,6 +671,7 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
           margin="normal"
           multiline
           rows={3}
+          size={isMobile ? "small" : "medium"}
         />
       <FormControlLabel
         control={<Checkbox name="anywhere" checked={form.anywhere} onChange={handleChange} />}
@@ -642,6 +700,7 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
           type="submit" 
           fullWidth
           disabled={isProcessing || !!phoneError || form.phone.length !== 10}
+          size={isMobile ? "small" : "medium"}
         >
           {isProcessing ? (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -652,7 +711,7 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
             'Submit'
           )}
         </Button>
-        <Button onClick={onCancel} fullWidth style={{ marginTop: 8 }} disabled={isProcessing}>Back</Button>
+        <Button onClick={onCancel} fullWidth sx={{ mt: 1 }} disabled={isProcessing} size={isMobile ? "small" : "medium"}>Back</Button>
       </form>
     </Box>
   );

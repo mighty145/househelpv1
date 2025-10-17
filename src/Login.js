@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { TextField, Button, Box, Typography } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { API_BASE_URL } from './config';
 
 export default function Login({ onLogin, onRegister, onBack }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [mobile, setMobile] = useState('');
   const [notRegistered, setNotRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,48 +63,51 @@ export default function Login({ onLogin, onRegister, onBack }) {
 
   // Always show login form
   return (
-    <Box textAlign="center" mt={2}>
-      <Typography variant="h6" gutterBottom>Login</Typography>
+    <Box sx={{ maxWidth: isMobile ? 300 : 400, mx: 'auto', mt: isMobile ? 2 : 4, p: isMobile ? 1 : 2, boxShadow: 2, borderRadius: 2 }}>
+      <Typography variant={isMobile ? "body1" : "h6"} align="center" gutterBottom>Login</Typography>
       <TextField
-        label="Mobile Number(10 digit)"
-        variant="outlined"
-        fullWidth
+        label="Mobile Number"
         value={mobile}
-        onChange={e => setMobile(e.target.value.replace(/[^0-9]/g, ''))}
+        onChange={e => setMobile(e.target.value)}
+        fullWidth
+        margin="normal"
         inputProps={{ maxLength: 10 }}
-        style={{ marginBottom: 24 }}
+        size={isMobile ? "small" : "medium"}
       />
       <Button
         variant="contained"
         color="primary"
         fullWidth
-        style={{ marginBottom: 16 }}
         onClick={handleLogin}
         disabled={loading}
+        sx={{ mt: isMobile ? 1 : 2 }}
+        size={isMobile ? "small" : "medium"}
       >
-        {loading ? 'LOGGING IN...' : 'LOGIN'}
-      </Button>
-      <Button
-        variant="outlined"
-        color="secondary"
-        fullWidth
-        style={{ marginBottom: 16 }}
-        onClick={onRegister}
-      >
-        REGISTER
-      </Button>
-      <Button
-        variant="text"
-        fullWidth
-        onClick={onBack}
-      >
-        BACK TO HOME
+        {loading ? 'Logging in...' : 'Login'}
       </Button>
       {notRegistered && (
-        <Typography color="error" sx={{ mt: 2 }}>
-          Mobile number not registered. Please register first.
-        </Typography>
+        <Button
+          variant="outlined"
+          color="secondary"
+          fullWidth
+          onClick={onRegister}
+          sx={{ mt: isMobile ? 1 : 2 }}
+          size={isMobile ? "small" : "medium"}
+        >
+          Register
+        </Button>
+      )}
+      {onBack && (
+        <Button
+          variant="text"
+          fullWidth
+          onClick={onBack}
+          sx={{ mt: isMobile ? 1 : 2 }}
+          size={isMobile ? "small" : "medium"}
+        >
+          Back
+        </Button>
       )}
     </Box>
   );
-}
+    }

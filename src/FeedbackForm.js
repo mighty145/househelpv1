@@ -10,9 +10,13 @@ import {
   Snackbar,
   Alert
 } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { API_BASE_URL } from './config';
 
 function FeedbackForm({ open, onClose }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -79,10 +83,10 @@ function FeedbackForm({ open, onClose }) {
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+  <Dialog open={open} onClose={onClose} maxWidth={isMobile ? "xs" : "sm"} fullWidth>
         <DialogTitle>Send Feedback</DialogTitle>
         <form onSubmit={handleSubmit}>
-          <DialogContent>
+          <DialogContent sx={{ px: isMobile ? 1 : 3 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
                 name="name"
@@ -90,6 +94,7 @@ function FeedbackForm({ open, onClose }) {
                 value={formData.name}
                 onChange={handleInputChange}
                 fullWidth
+                size={isMobile ? "small" : "medium"}
               />
               <TextField
                 name="email"
@@ -98,6 +103,7 @@ function FeedbackForm({ open, onClose }) {
                 value={formData.email}
                 onChange={handleInputChange}
                 fullWidth
+                size={isMobile ? "small" : "medium"}
               />
               <TextField
                 name="phone"
@@ -105,6 +111,7 @@ function FeedbackForm({ open, onClose }) {
                 value={formData.phone}
                 onChange={handleInputChange}
                 fullWidth
+                size={isMobile ? "small" : "medium"}
               />
               <TextField
                 name="subject"
@@ -113,6 +120,7 @@ function FeedbackForm({ open, onClose }) {
                 onChange={handleInputChange}
                 fullWidth
                 required
+                size={isMobile ? "small" : "medium"}
               />
               <TextField
                 name="message"
@@ -123,12 +131,13 @@ function FeedbackForm({ open, onClose }) {
                 onChange={handleInputChange}
                 fullWidth
                 required
+                size={isMobile ? "small" : "medium"}
               />
             </Box>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={onClose}>Cancel</Button>
-            <Button type="submit" variant="contained" color="primary">
+          <DialogActions sx={{ flexDirection: isMobile ? "column" : "row", gap: isMobile ? 1 : 2 }}>
+            <Button onClick={onClose} size={isMobile ? "small" : "medium"}>Cancel</Button>
+            <Button type="submit" variant="contained" color="primary" size={isMobile ? "small" : "medium"}>
               Submit Feedback
             </Button>
           </DialogActions>

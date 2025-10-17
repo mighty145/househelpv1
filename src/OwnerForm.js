@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { Button, TextField, Typography } from '@mui/material';
+import { Button, TextField, Typography, Box } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { API_BASE_URL } from './config';
 
 function OwnerForm({ onBack }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [form, setForm] = useState({
     name: '',
     location: '',
@@ -108,8 +112,8 @@ function OwnerForm({ onBack }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Typography variant="h6" gutterBottom>Owner Registration</Typography>
+    <Box component="form" onSubmit={handleSubmit} sx={{ px: isMobile ? 1 : 3, py: isMobile ? 1 : 2 }}>
+      <Typography variant={isMobile ? "body1" : "h6"} gutterBottom>Owner Registration</Typography>
       <TextField 
         label="Name" 
         name="name" 
@@ -119,6 +123,7 @@ function OwnerForm({ onBack }) {
         margin="normal" 
         required 
         disabled={loading}
+        size={isMobile ? "small" : "medium"}
       />
       <TextField 
         label="Location" 
@@ -129,6 +134,7 @@ function OwnerForm({ onBack }) {
         margin="normal" 
         required 
         disabled={loading}
+        size={isMobile ? "small" : "medium"}
       />
       <TextField 
         label="Phone number (10 digits)" 
@@ -142,6 +148,7 @@ function OwnerForm({ onBack }) {
         error={!!phoneError}
         inputProps={{ maxLength: 10 }}
         helperText={phoneError || (form.phone.length > 0 ? `${form.phone.length}/10 digits` : 'Enter 10 digit mobile number')}
+        size={isMobile ? "small" : "medium"}
       />
       <Button 
         variant="contained" 
@@ -149,7 +156,8 @@ function OwnerForm({ onBack }) {
         type="submit" 
         fullWidth
         disabled={loading || !!phoneError || form.phone.length !== 10}
-        style={{ marginTop: 16 }}
+        sx={{ mt: isMobile ? 1 : 2 }}
+        size={isMobile ? "small" : "medium"}
       >
         {loading ? 'REGISTERING...' : 'SUBMIT'}
       </Button>
@@ -157,11 +165,12 @@ function OwnerForm({ onBack }) {
         onClick={onBack} 
         fullWidth 
         disabled={loading}
-        style={{ marginTop: 8 }}
+        sx={{ mt: isMobile ? 1 : 2 }}
+        size={isMobile ? "small" : "medium"}
       >
         BACK
       </Button>
-    </form>
+    </Box>
   );
 }
 

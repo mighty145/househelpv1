@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardContent, Avatar, Grid, Box, Button, Typography, TextField, IconButton, Tooltip, Menu, MenuItem, Divider, Dialog, DialogTitle, DialogContent, DialogActions, Rating, Paper } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { API_BASE_URL } from './config';
 import MaidForm from './MaidForm';
 import FeedbackForm from './FeedbackForm';
+// ...existing code...
 
-function ConnectButton({ maid, disabled = false }) {
+function ConnectButton({ maid, disabled = false, isMobile }) {
   const [showPhone, setShowPhone] = useState(false);
-
   if (disabled) {
     return (
       <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -17,8 +20,8 @@ function ConnectButton({ maid, disabled = false }) {
             mt: 1, 
             mb: 0, 
             minWidth: 0, 
-            width: 'auto', 
-            px: 2,
+            width: isMobile ? '100%' : 'auto', 
+            px: isMobile ? 1 : 2,
             backgroundColor: '#e0e0e0',
             color: '#9e9e9e'
           }}
@@ -42,52 +45,53 @@ function ConnectButton({ maid, disabled = false }) {
       <Button 
         variant="contained" 
         color="success" 
-        sx={{ mt: 1, mb: 0, minWidth: 0, width: 'auto', px: 2 }} 
+        size="small"
+        sx={{
+          mt: 1,
+          mb: 0,
+          minWidth: 0,
+          width: isMobile ? '100%' : 'auto',
+          px: isMobile ? 1 : 2,
+          fontSize: isMobile ? '0.75rem' : '0.85rem',
+          py: 0.5,
+          borderRadius: 2
+        }}
         onClick={() => setShowPhone(!showPhone)}
       >
-        {showPhone ? 'Hide Contact' : 'Connect'}
+        {showPhone ? 'HIDE CONTACT' : 'CONNECT'}
       </Button>
       {showPhone && (
-        <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
             <Button
               variant="outlined"
               color="primary"
-              size="small"
-              sx={{ minWidth: 0, px: 1.5 }}
+              size={isMobile ? "medium" : "small"}
+              sx={{ minWidth: 0, px: 2, borderRadius: 2, borderColor: '#90caf9', color: '#1976d2' }}
               href={`tel:${maid.phone}`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path fill="#1976d2" d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.21c1.21.49 2.53.76 3.88.76a1 1 0 011 1v3.5a1 1 0 01-1 1C7.61 22 2 16.39 2 9.5a1 1 0 011-1H6.5a1 1 0 011 1c0 1.35.27 2.67.76 3.88a1 1 0 01-.21 1.11l-2.2 2.2z"/>
               </svg>
             </Button>
             <Button
               variant="outlined"
-              size="small"
-              sx={{ 
-                minWidth: 0, 
-                px: 1.5,
-                color: '#25D366',
-                borderColor: '#25D366',
-                '&:hover': {
-                  borderColor: '#128C7E',
-                  color: '#128C7E'
-                }
-              }}
+              size={isMobile ? "medium" : "small"}
+              sx={{ minWidth: 0, px: 2, borderRadius: 2, borderColor: '#25D366', color: '#25D366' }}
               href={`https://wa.me/${maid.phone}`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.488"/>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path fill="#25D366" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.488"/>
               </svg>
             </Button>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 6 }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#4b6043" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3 5.18 2 2 0 0 1 5 3h2.09a2 2 0 0 1 2 1.72c.13 1.13.37 2.23.72 3.28a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45c1.05.35 2.15.59 3.28.72A2 2 0 0 1 22 16.92z"></path></svg>
-            </span>
-            <Typography variant="body1" sx={{ color: '#4b6043', fontWeight: 'bold', textAlign: 'left', display: 'inline' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" style={{ marginRight: 4 }}>
+              <path fill="#4b6043" d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.21c1.21.49 2.53.76 3.88.76a1 1 0 011 1v3.5a1 1 0 01-1 1C7.61 22 2 16.39 2 9.5a1 1 0 011-1H6.5a1 1 0 011 1c0 1.35.27 2.67.76 3.88a1 1 0 01-.21 1.11l-2.2 2.2z"/>
+            </svg>
+            <Typography sx={{ color: '#4b6043', fontWeight: 500, textAlign: 'left', display: 'inline', fontSize: isMobile ? '0.95rem' : '1.05rem', letterSpacing: 1 }}>
               {maid.phone}
             </Typography>
           </Box>
@@ -96,8 +100,10 @@ function ConnectButton({ maid, disabled = false }) {
     </Box>
   );
 }
-
 export default function HomePage({ onBack, userMobile }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
   // Reset all filters to default values
   const handleResetFilters = () => {
     setFilterWorkType('');
@@ -233,58 +239,6 @@ export default function HomePage({ onBack, userMobile }) {
     } catch (error) {
       console.error('Error hiring maid:', error);
       alert('Error hiring maid. Please try again.');
-    } finally {
-      const slotKey = `${maidPhone}-${slotIndex}`;
-      setHiringSlots(prev => {
-        const newState = { ...prev };
-        delete newState[slotKey];
-        return newState;
-      });
-    }
-  };
-
-  const handleUnhire = async (maidPhone, slotIndex = 0) => {
-    if (!maidPhone) {
-      alert('Maid phone number not available');
-      return;
-    }
-    
-    if (!currentUser.phone) {
-      alert('User information not available. Please refresh the page and try again.');
-      return;
-    }
-    
-    // Confirmation dialog before unhiring
-    const confirmUnhire = window.confirm('Are you sure you want to unhire this time slot? This will make the slot available for others to hire.');
-    if (!confirmUnhire) {
-      return; // User cancelled, exit without unhiring
-    }
-    
-    const slotKey = `${maidPhone}-${slotIndex}`;
-    setHiringSlots(prev => ({ ...prev, [slotKey]: true }));
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/cosmos/maids/${encodeURIComponent(maidPhone)}/slots/${slotIndex + 1}/unhire`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          unhired_by_phone: currentUser.phone
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok && data.status === 'success') {
-        alert(`Time slot unhired successfully! This slot is now available for others.`);
-        // Refresh the maid list to show updated status
-        await fetchMaids();
-      } else {
-        alert(data.error || 'Failed to unhire this slot');
-      }
-    } catch (error) {
-      console.error('Error unhiring maid slot:', error);
-      alert('Error unhiring slot. Please try again.');
     } finally {
       const slotKey = `${maidPhone}-${slotIndex}`;
       setHiringSlots(prev => {
@@ -1035,6 +989,52 @@ export default function HomePage({ onBack, userMobile }) {
                               ✓ HIRED
                             </Box>
                           </div>
+                          {/* Gender */}
+                          {maid.gender && (
+                            <Typography variant="body1" sx={{ color: '#4b6043', mb: 0.5, display: 'flex', alignItems: 'center' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                  <circle cx="12" cy="8" r="7"></circle>
+                                  <path d="M12 15v7"></path>
+                                  <path d="M9 18h6"></path>
+                                </svg>
+                              </span>
+                              {maid.gender}
+                            </Typography>
+                          )}
+                          {/* Location */}
+                          {maid.location && (
+                            <Typography 
+                              variant="body1" 
+                              sx={{ 
+                                color: '#7c9473', 
+                                mb: 0.5, 
+                                display: 'block', 
+                                lineHeight: 1.4,
+                                wordBreak: 'break-word',
+                                whiteSpace: 'pre-line',
+                                p: 0,
+                                width: '100%',
+                                overflowWrap: 'anywhere',
+                                maxWidth: '100%',
+                              }}
+                            >
+                              <span style={{ display: 'block', marginBottom: 4, width: '100%' }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" style={{ verticalAlign: 'middle' }}>
+                                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                  <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                              </span>
+                              <span style={{
+                                display: 'block',
+                                width: '100%',
+                                wordBreak: 'break-word',
+                                overflowWrap: 'anywhere',
+                                whiteSpace: 'pre-line',
+                              }}>{maid.location}</span>
+                            </Typography>
+                          )}
+                          {/* Work Type */}
                           <Typography variant="body1" sx={{ textAlign: 'left', wordBreak: 'break-word', fontWeight: 'bold', mb: 1, display: 'flex', alignItems: 'center' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 4 }}>
                               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4 }}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 3v4M8 3v4M2 11h20"></path></svg>
@@ -1042,7 +1042,6 @@ export default function HomePage({ onBack, userMobile }) {
                             <span style={{ fontWeight: 'normal', color: '#4b6043' }}>{maid.workType}</span>
                           </Typography>
                           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', mb: 1, mt: 2 }}>
-                            <Typography variant="body1" sx={{ color: '#7c9473', mb: 0.5 }}><b>Location:</b> {maid.location}</Typography>
                             
                             <Typography variant="body1" sx={{ color: '#4b6043', mb: 0.5, fontWeight: 'bold' }}>Your Hired Slots:</Typography>
                             {maid.timeSlots && maid.timeSlots.length > 0 ? (
@@ -1130,7 +1129,7 @@ export default function HomePage({ onBack, userMobile }) {
                             justifyContent: 'center', 
                             gap: { xs: 1.5, sm: 2 }
                           }}>
-                            <ConnectButton maid={maid} />
+                            <ConnectButton maid={maid} isMobile={isMobile} />
                             <Button
                               variant="outlined"
                               size="small"
@@ -1274,7 +1273,18 @@ export default function HomePage({ onBack, userMobile }) {
                             <span style={{ fontWeight: 'normal', color: '#4b6043' }}>{maid.workType}</span>
                           </Typography>
                           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', mb: 1, mt: 2 }}>
-                            <Typography variant="body1" sx={{ color: '#7c9473', mb: 0.5 }}><b>Location:</b> {maid.location}</Typography>
+                            <Typography variant="body1" sx={{ color: '#7c9473', mb: 0.5 }}>
+                              <b>Location:</b> {maid.location && (
+                                <span style={{
+                                  wordBreak: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  whiteSpace: 'pre-line',
+                                  display: 'inline',
+                                }}>
+                                  {(maid.location || '').replace(/(.{36})/g, '$1-\n')}
+                                </span>
+                              )}
+                            </Typography>
                             
                             <Typography variant="body1" sx={{ color: '#4b6043', mb: 0.5, fontWeight: 'bold' }}>Availability:</Typography>
                             {maid.timeSlots && maid.timeSlots.length > 0 ? (
@@ -1626,7 +1636,7 @@ export default function HomePage({ onBack, userMobile }) {
                 </Box>
               </MenuItem>
               
-              <MenuItem onClick={() => { handleProfileMenuClose(); setCurrentUser({ phone: '', name: '' }); setCurrentView('home'); if (typeof onBack === 'function') { onBack(); } }} sx={{ py: 1.5 }}>
+              <MenuItem onClick={() => { handleProfileMenuClose(); setCurrentUser({ phone: '', name: '' }); setCurrentView('home'); if (typeof onBack === 'function') { onBack(); } navigate('/'); }} sx={{ py: 1.5 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                   <Box sx={{ 
                     width: 32, 
@@ -1800,17 +1810,7 @@ export default function HomePage({ onBack, userMobile }) {
               sx={{ minWidth: 90 }}
             />
           </Box>
-    <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 170 }}>
-            <input
-              type="checkbox"
-              id="living-filter"
-              checked={filterLiving === 'Yes'}
-              onChange={e => setFilterLiving(e.target.checked ? 'Yes' : '')}
-              style={{ marginRight: 8 }}
-            />
-            <label htmlFor="living-filter" style={{ fontSize: '14px', color: '#4b6043', marginRight: 16 }}>
-              24-hour Live-in
-            </label>
+          <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 170 }}>
             {/* Gender Filter Dropdown */}
             <TextField
               select
@@ -1828,17 +1828,17 @@ export default function HomePage({ onBack, userMobile }) {
                 <option key={gender} value={gender}>{gender}</option>
               ))}
             </TextField>
+            <input
+              type="checkbox"
+              id="living-filter"
+              checked={filterLiving === 'Yes'}
+              onChange={e => setFilterLiving(e.target.checked ? 'Yes' : '')}
+              style={{ marginRight: 8 }}
+            />
+            <label htmlFor="living-filter" style={{ fontSize: '14px', color: '#4b6043', marginRight: 16 }}>
+              24-hour Live-in
+            </label>
           </Box>
-          {/* Reset Filters Button */}
-          <IconButton
-            aria-label="Reset Filters"
-            size="small"
-            onClick={handleResetFilters}
-            sx={{ ml: 1, border: '1px solid #bdbdbd', background: '#fff', p: 0.5 }}
-            title="Reset Filters"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-          </IconButton>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <input
@@ -1864,6 +1864,16 @@ export default function HomePage({ onBack, userMobile }) {
                 Show Hired
               </label>
             </Box>
+            {/* Reset Filters Button - moved to end */}
+            <IconButton
+              aria-label="Reset Filters"
+              size="small"
+              onClick={handleResetFilters}
+              sx={{ ml: 1, border: '1px solid #bdbdbd', background: '#fff', p: 0.5 }}
+              title="Reset Filters"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            </IconButton>
           </Box>
         </Box>
 
@@ -2013,17 +2023,6 @@ export default function HomePage({ onBack, userMobile }) {
                     />
                     <CardContent sx={{ pt: 0 }}>
                       <Box sx={{ textAlign: 'left' }}>
-                        {maid.location && (
-                          <Typography variant="body1" sx={{ color: '#4b6043', mb: 0.5, display: 'flex', alignItems: 'center' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}>
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                              </svg>
-                            </span>
-                            {maid.location}
-                          </Typography>
-                        )}
                         {maid.gender && (
                           <Typography variant="body1" sx={{ color: '#4b6043', mb: 0.5, display: 'flex', alignItems: 'center' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}>
@@ -2034,6 +2033,17 @@ export default function HomePage({ onBack, userMobile }) {
                               </svg>
                             </span>
                             {maid.gender}
+                          </Typography>
+                        )}
+                        {maid.location && (
+                          <Typography variant="body1" sx={{ color: '#4b6043', mb: 0.5, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="#7c9473" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                              </svg>
+                            </span>
+                            {maid.location}
                           </Typography>
                         )}
                         {maid.workType && (
