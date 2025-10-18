@@ -62,11 +62,15 @@ export default function Login({ onLogin, onRegister, onBack }) {
   };
 
   // Always show login form
+  const handleBackToWelcome = () => {
+    window.location.assign('/');
+  };
+
   return (
     <Box sx={{ maxWidth: isMobile ? 300 : 400, mx: 'auto', mt: isMobile ? 2 : 4, p: isMobile ? 1 : 2, boxShadow: 2, borderRadius: 2 }}>
       <Typography variant={isMobile ? "body1" : "h6"} align="center" gutterBottom>Login</Typography>
       <TextField
-        label="Mobile Number"
+        label="10-digit Mobile Number"
         value={mobile}
         onChange={e => setMobile(e.target.value)}
         fullWidth
@@ -79,35 +83,36 @@ export default function Login({ onLogin, onRegister, onBack }) {
         color="primary"
         fullWidth
         onClick={handleLogin}
-        disabled={loading}
+        disabled={loading || !/^\d{10}$/.test(mobile)}
         sx={{ mt: isMobile ? 1 : 2 }}
         size={isMobile ? "small" : "medium"}
       >
         {loading ? 'Logging in...' : 'Login'}
       </Button>
+      <Button
+        variant="outlined"
+        color="secondary"
+        fullWidth
+        onClick={onRegister}
+        sx={{ mt: isMobile ? 1 : 2 }}
+        size={isMobile ? "small" : "medium"}
+      >
+        Register
+      </Button>
       {notRegistered && (
-        <Button
-          variant="outlined"
-          color="secondary"
-          fullWidth
-          onClick={onRegister}
-          sx={{ mt: isMobile ? 1 : 2 }}
-          size={isMobile ? "small" : "medium"}
-        >
-          Register
-        </Button>
+        <Typography color="error" align="center" sx={{ mt: 1 }}>
+          The mobile number is not registered, please register and try again
+        </Typography>
       )}
-      {onBack && (
-        <Button
-          variant="text"
-          fullWidth
-          onClick={onBack}
-          sx={{ mt: isMobile ? 1 : 2 }}
-          size={isMobile ? "small" : "medium"}
-        >
-          Back
-        </Button>
-      )}
+      <Button
+        variant="text"
+        fullWidth
+        onClick={handleBackToWelcome}
+        sx={{ mt: isMobile ? 1 : 2 }}
+        size={isMobile ? "small" : "medium"}
+      >
+        Back
+      </Button>
     </Box>
   );
     }

@@ -92,8 +92,8 @@ function OwnerForm({ onBack }) {
       }
       
       if (result.status === 'success') {
-        alert('Registration successful!');
-        setForm({ name: '', location: '', phone: '' });
+  alert('Registration successful!');
+  window.location.assign('/login');
       } else {
         alert(result.message || 'Registration failed. Please try again.');
       }

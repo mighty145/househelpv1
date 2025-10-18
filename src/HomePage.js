@@ -1,3 +1,5 @@
+  // Restore phone input dialog for manual update
+  // Fix: move handler inside HomePage for direct access to state
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardContent, Avatar, Grid, Box, Button, Typography, TextField, IconButton, Tooltip, Menu, MenuItem, Divider, Dialog, DialogTitle, DialogContent, DialogActions, Rating, Paper } from '@mui/material';
@@ -7,6 +9,7 @@ import { API_BASE_URL } from './config';
 import MaidForm from './MaidForm';
 import FeedbackForm from './FeedbackForm';
 // ...existing code...
+  // Place this function inside HomePage for correct scope
 
 function ConnectButton({ maid, disabled = false, isMobile }) {
   const [showPhone, setShowPhone] = useState(false);
@@ -101,6 +104,141 @@ function ConnectButton({ maid, disabled = false, isMobile }) {
   );
 }
 export default function HomePage({ onBack, userMobile }) {
+  // Unhire slot handler
+  const handleUnhire = async (maidPhone, slotIndex) => {
+    try {
+      const slotNumber = slotIndex + 1; // slot_number is 1-based
+      const response = await fetch(`${API_BASE_URL}/api/cosmos/maids/${maidPhone}/slots/${slotNumber}/unhire`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ unhired_by_phone: userMobile })
+      });
+      const result = await response.json();
+      if (result.status === 'success') {
+        alert('Slot successfully un-hired!');
+        setCurrentView('home');
+        // Wait for the view to change, then refresh
+        setTimeout(() => {
+          handleRefresh();
+        }, 100);
+      } else {
+        alert(result.error || 'Failed to unhire slot.');
+      }
+    } catch (err) {
+      alert('Error unhiring slot.');
+      console.error(err);
+    }
+  };
+  // Add the missing handler inside HomePage
+  const handleUpdateMaidFormOpen = async () => {
+    let phone = '';
+    // Create a modal input for better mobile visibility
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Enter 10-digit househelp number';
+    input.maxLength = 10;
+    input.pattern = '[0-9]*';
+    input.inputMode = 'numeric';
+    input.addEventListener('input', function(e) {
+      // Remove non-numeric characters
+      let val = input.value.replace(/[^0-9]/g, '');
+      // Limit to 10 digits
+      if (val.length > 10) val = val.slice(0, 10);
+      input.value = val;
+    });
+    input.style.width = '90vw';
+    input.style.maxWidth = '400px';
+    input.style.fontSize = '1.2em';
+    input.style.padding = '12px';
+    input.style.border = '2px solid #4b6043';
+    input.style.borderRadius = '8px';
+    input.style.margin = '16px auto 0 auto';
+    input.style.display = 'block';
+    input.style.boxSizing = 'border-box';
+    const errorDiv = document.createElement('div');
+    errorDiv.style.color = '#d32f2f';
+    errorDiv.style.fontSize = '1em';
+    errorDiv.style.textAlign = 'center';
+    errorDiv.style.margin = '8px 0 0 0';
+    errorDiv.style.minHeight = '24px';
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(input);
+    wrapper.appendChild(errorDiv);
+    const dialog = document.createElement('dialog');
+    dialog.appendChild(wrapper);
+    dialog.style.padding = '0';
+    dialog.style.borderRadius = '12px';
+    dialog.style.border = '2px solid #4b6043';
+    dialog.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)';
+    dialog.style.maxWidth = '95vw';
+    dialog.style.background = '#fff';
+    const btnRow = document.createElement('div');
+    btnRow.style.display = 'flex';
+    btnRow.style.gap = '12px';
+    btnRow.style.marginTop = '12px';
+
+    const okBtn = document.createElement('button');
+    okBtn.textContent = 'OK';
+    okBtn.style.padding = '8px 24px';
+    okBtn.style.background = '#4b6043';
+    okBtn.style.color = '#fff';
+    okBtn.style.border = 'none';
+    okBtn.style.borderRadius = '6px';
+    okBtn.style.fontSize = '1em';
+    okBtn.onclick = (e) => {
+      e.preventDefault();
+      const val = input.value.trim();
+      if (!/^[0-9]{10}$/.test(val)) {
+        errorDiv.textContent = 'Please enter a valid 10-digit phone number';
+        input.focus();
+        return;
+      }
+      phone = val;
+      dialog.close();
+    };
+
+    const backBtn = document.createElement('button');
+    backBtn.textContent = 'Back';
+    backBtn.style.padding = '8px 24px';
+    backBtn.style.background = '#bdbdbd';
+    backBtn.style.color = '#333';
+    backBtn.style.border = 'none';
+    backBtn.style.borderRadius = '6px';
+    backBtn.style.fontSize = '1em';
+    backBtn.onclick = (e) => {
+      e.preventDefault();
+      phone = '';
+      dialog.close();
+    };
+
+    btnRow.appendChild(okBtn);
+    btnRow.appendChild(backBtn);
+    wrapper.appendChild(btnRow);
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    dialog.addEventListener('close', async () => {
+      document.body.removeChild(dialog);
+      if (!phone) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/cosmos/maids/${phone}`);
+        if (!response.ok) {
+          throw new Error('Househelp not found with this phone number');
+        }
+        const data = await response.json();
+        if (data.maid) {
+          setUpdateMaidData(data.maid);
+          setUpdateMaidPhone(phone);
+          setUpdateMaidFormOpen(true);
+        } else {
+          alert('No househelp found with this phone number');
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    }, { once: true });
+  };
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
@@ -597,74 +735,17 @@ export default function HomePage({ onBack, userMobile }) {
   };
 
   // Handlers for updating maid details
-  const handleUpdateMaidFormOpen = async () => {
-    let phone = '';
-    let errorMsg = '';
-    // Create a modal input for better mobile visibility
-    const input = document.createElement('input');
-    input.type = 'tel';
-    input.placeholder = 'Enter househelp phone number to update';
-    input.style.width = '90vw';
-    input.style.maxWidth = '400px';
-    input.style.fontSize = '1.2em';
-    input.style.padding = '12px';
-    input.style.border = '2px solid #4b6043';
-    input.style.borderRadius = '8px';
-    input.style.margin = '16px auto 0 auto';
-    input.style.display = 'block';
-    input.style.boxSizing = 'border-box';
-    const errorDiv = document.createElement('div');
-    errorDiv.style.color = '#d32f2f';
-    errorDiv.style.fontSize = '1em';
-    errorDiv.style.textAlign = 'center';
-    errorDiv.style.margin = '8px 0 0 0';
-    errorDiv.style.minHeight = '24px';
-    const wrapper = document.createElement('div');
-    wrapper.appendChild(input);
-    wrapper.appendChild(errorDiv);
-    const dialog = document.createElement('dialog');
-    dialog.appendChild(wrapper);
-    dialog.style.padding = '0';
-    dialog.style.borderRadius = '12px';
-    dialog.style.border = '2px solid #4b6043';
-    dialog.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)';
-    dialog.style.maxWidth = '95vw';
-    dialog.style.background = '#fff';
-    const okBtn = document.createElement('button');
-    okBtn.textContent = 'OK';
-    okBtn.style.margin = '12px 8px 16px 8px';
-    okBtn.style.padding = '8px 24px';
-    okBtn.style.background = '#4b6043';
-    okBtn.style.color = '#fff';
-    okBtn.style.border = 'none';
-    okBtn.style.borderRadius = '6px';
-    okBtn.style.fontSize = '1em';
-    okBtn.onclick = (e) => {
-      e.preventDefault();
-      const val = input.value.trim();
-      if (!/^[0-9]{10}$/.test(val)) {
-        errorDiv.textContent = 'Please enter a valid 10-digit phone number';
-        input.focus();
-        return;
-      }
-      phone = val;
-      dialog.close();
-    };
-    wrapper.appendChild(okBtn);
-    document.body.appendChild(dialog);
-    dialog.showModal();
-    await new Promise(resolve => dialog.addEventListener('close', resolve, { once: true }));
-    document.body.removeChild(dialog);
-    if (!phone) return;
+  // New handler: open update form with maid data from card
+  const handleEditMaidFromCard = async (maid) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/cosmos/maids/${phone}`);
+      const response = await fetch(`${API_BASE_URL}/api/cosmos/maids/${maid.phone}`);
       if (!response.ok) {
-        throw new Error('Househelp not found with this phone number');
+        throw new Error('Could not fetch latest househelp data');
       }
       const data = await response.json();
       if (data.maid) {
         setUpdateMaidData(data.maid);
-        setUpdateMaidPhone(phone);
+        setUpdateMaidPhone(maid.phone);
         setUpdateMaidFormOpen(true);
       } else {
         alert('No househelp found with this phone number');
@@ -942,16 +1023,23 @@ export default function HomePage({ onBack, userMobile }) {
                   background: 'linear-gradient(120deg, #e8f5e8 0%, #f0f8f0 100%)',
                   border: '2px solid #4caf50',
                 }}>
-                  <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
-                    {maid.photoPath ? (
-                      <Avatar
-                        src={maid.photoPath.startsWith('http') ? maid.photoPath : `${API_BASE_URL}/uploads/${maid.photoPath}`}
-                        alt={maid.name}
-                        sx={{ width: { xs: 64, sm: 96 }, height: { xs: 64, sm: 96 } }}
-                      />
-                    ) : (
-                      <Avatar sx={{ width: { xs: 64, sm: 96 }, height: { xs: 64, sm: 96 } }}>{maid.name ? maid.name[0] : '?'}</Avatar>
-                    )}
+                  <Box sx={{ position: 'absolute', top: 8, right: 12, zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                    <Button variant="text" sx={{ color: '#1976d2', fontWeight: 600, textTransform: 'none', fontSize: '0.95rem', minWidth: 'auto', p: 0 }}
+                      onClick={() => handleEditMaidFromCard(maid)}
+                    >
+                      Edit Househelp
+                    </Button>
+                    <Box>
+                      {maid.photoPath ? (
+                        <Avatar
+                          src={maid.photoPath.startsWith('http') ? maid.photoPath : `${API_BASE_URL}/uploads/${maid.photoPath}`}
+                          alt={maid.name}
+                          sx={{ width: { xs: 64, sm: 96 }, height: { xs: 64, sm: 96 } }}
+                        />
+                      ) : (
+                        <Avatar sx={{ width: { xs: 64, sm: 96 }, height: { xs: 64, sm: 96 } }}>{maid.name ? maid.name[0] : '?'}</Avatar>
+                      )}
+                    </Box>
                   </Box>
                   <Box sx={{ flex: 1, position: 'relative', pl: 0, pr: 0 }}>
                     <CardHeader
@@ -1455,7 +1543,14 @@ export default function HomePage({ onBack, userMobile }) {
             }}>
               Available househelp ({searchedMaids.length})
             </Typography>
-
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 1, mb: 2, gap: 2 }}>
+              <Button variant="text" sx={{ color: '#388e3c', fontWeight: 600, textTransform: 'none', fontSize: '1rem' }} onClick={handleOpenMaidForm}>
+                Add househelp
+              </Button>
+              <Button variant="text" sx={{ color: '#1976d2', fontWeight: 600, textTransform: 'none', fontSize: '1rem' }} onClick={handleUpdateMaidFormOpen}>
+                Update househelp
+              </Button>
+            </Box>
           </Box>
           
           <Box sx={{ 
@@ -1906,32 +2001,31 @@ export default function HomePage({ onBack, userMobile }) {
                       : '1px solid #b2c9ab', // Default border
                   opacity: isCompletelyHired(maid) ? 0.7 : 1, // Slightly fade fully hired cards
                 }}>
-                  <Box sx={{ 
-                    position: { xs: 'static', sm: 'absolute' }, 
-                    top: { sm: 16 }, 
-                    right: { sm: 16 }, 
-                    zIndex: 2,
-                    alignSelf: { xs: 'center', sm: 'auto' },
-                    mb: { xs: 2, sm: 0 },
-                    order: { xs: -1, sm: 0 }
-                  }}>
-                    {maid.photoPath ? (
-                      <Avatar
-                        src={maid.photoPath.startsWith('http') ? maid.photoPath : `${API_BASE_URL}/uploads/${maid.photoPath}`}
-                        alt={maid.name}
-                        sx={{ width: { xs: 92, sm: 96 }, height: { xs: 92, sm: 96 } }}
-                      />
-                    ) : (
-                      <Avatar sx={{ width: { xs: 92, sm: 96 }, height: { xs: 92, sm: 96 } }}>
-                        {maid.name ? (() => {
-                          const nameParts = maid.name.trim().split(' ');
-                          if (nameParts.length > 1) {
-                            return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
-                          }
-                          return maid.name[0].toUpperCase();
-                        })() : '?'}
-                      </Avatar>
-                    )}
+                  <Box sx={{ position: 'absolute', top: 8, right: 12, zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                    <Button variant="text" sx={{ color: '#1976d2', fontWeight: 600, textTransform: 'none', fontSize: '0.95rem', minWidth: 'auto', p: 0 }}
+                      onClick={() => handleEditMaidFromCard(maid)}
+                    >
+                      Edit Househelp
+                    </Button>
+                    <Box>
+                      {maid.photoPath ? (
+                        <Avatar
+                          src={maid.photoPath.startsWith('http') ? maid.photoPath : `${API_BASE_URL}/uploads/${maid.photoPath}`}
+                          alt={maid.name}
+                          sx={{ width: { xs: 92, sm: 96 }, height: { xs: 92, sm: 96 } }}
+                        />
+                      ) : (
+                        <Avatar sx={{ width: { xs: 92, sm: 96 }, height: { xs: 92, sm: 96 } }}>
+                          {maid.name ? (() => {
+                            const nameParts = maid.name.trim().split(' ');
+                            if (nameParts.length > 1) {
+                              return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+                            }
+                            return maid.name[0].toUpperCase();
+                          })() : '?'}
+                        </Avatar>
+                      )}
+                    </Box>
                   </Box>
                   <Box sx={{ 
                     flex: 1, 

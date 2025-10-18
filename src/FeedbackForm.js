@@ -29,6 +29,7 @@ function FeedbackForm({ open, onClose }) {
     message: '',
     severity: 'success'
   });
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -40,6 +41,7 @@ function FeedbackForm({ open, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/feedback`, {
         method: 'POST',
@@ -50,7 +52,7 @@ function FeedbackForm({ open, onClose }) {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setSnackbar({
           open: true,
@@ -74,6 +76,8 @@ function FeedbackForm({ open, onClose }) {
         message: error.message || 'Failed to submit feedback',
         severity: 'error'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -136,9 +140,9 @@ function FeedbackForm({ open, onClose }) {
             </Box>
           </DialogContent>
           <DialogActions sx={{ flexDirection: isMobile ? "column" : "row", gap: isMobile ? 1 : 2 }}>
-            <Button onClick={onClose} size={isMobile ? "small" : "medium"}>Cancel</Button>
-            <Button type="submit" variant="contained" color="primary" size={isMobile ? "small" : "medium"}>
-              Submit Feedback
+            <Button onClick={onClose} size={isMobile ? "small" : "medium"} disabled={loading}>Cancel</Button>
+            <Button type="submit" variant="contained" color="primary" size={isMobile ? "small" : "medium"} disabled={loading}>
+              {loading ? 'Processing...' : 'Submit Feedback'}
             </Button>
           </DialogActions>
         </form>

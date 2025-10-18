@@ -312,8 +312,9 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
     const finalWorkType = getFinalWorkType(form, customWorkType);
     const finalLocation = getFinalLocation(form, customLocation);
     const formData = new FormData();
-    formData.append('added_by', currentUser?.name || '');
-    formData.append('added_by_phone', currentUser?.phone || '');
+      formData.append('added_by', currentUser?.name || '');
+      formData.append('added_by_phone', currentUser?.phone || '');
+      formData.append('updated_by', currentUser?.name || '');
     formData.append('phone', form.phone);
     // For update mode, send to different endpoint
     const endpoint = isUpdateMode ? 
@@ -328,7 +329,6 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
     // Send all time slots as JSON for the available table
     formData.append('timeSlots', JSON.stringify(form.timeSlots));
 
-    // Build merged available_slots that preserves existing hired state when updating
     const mergedAvailableSlots = form.timeSlots.map((slot, idx) => {
       const existing = (initialData && Array.isArray(initialData.available_slots)) ? (initialData.available_slots[idx] || {}) : {};
       return {
@@ -361,9 +361,9 @@ function MaidForm({ onBack, onSuccess, onCancel, currentUser, initialData, isUpd
   try {
       let response;
       if (isUpdateMode && form.photo) {
-        // If updating and a new photo is selected, use FormData
+        // If updating and a new photo is selected, use FormData and POST (not PUT)
         response = await fetch(endpoint, {
-          method: 'PUT',
+          method: 'POST',
           body: formData
         });
       } else {

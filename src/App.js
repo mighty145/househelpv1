@@ -104,11 +104,7 @@ function App() {
             )}
             {role === 'maid' && <MaidForm onBack={() => setRole(null)} />}
             {role === 'owner' && !showOwnerForm && !loggedIn && (
-              <Login
-                onLogin={handleLogin}
-                onRegister={() => setShowOwnerForm(true)}
-                onBack={() => setRole(null)}
-              />
+              <Navigate to="/login" replace />
             )}
             {role === 'owner' && !showOwnerForm && loggedIn && (
               <Navigate to="/home" replace />
@@ -116,6 +112,29 @@ function App() {
             {role === 'owner' && showOwnerForm && <OwnerForm onBack={() => { setRole(null); setShowOwnerForm(false); }} />}
           </Paper>
         </Container>
+      } />
+      <Route path="/login" element={
+        showOwnerForm ? (
+          <Container maxWidth={isMobile ? "xs" : "sm"} style={{ marginTop: isMobile ? 16 : 40, padding: isMobile ? 8 : 0 }}>
+            <Paper elevation={3} style={{ padding: isMobile ? 12 : 24 }}>
+              <OwnerForm onBack={() => setShowOwnerForm(false)} />
+            </Paper>
+          </Container>
+        ) : loggedIn ? (
+          <Navigate to="/home" replace />
+        ) : (
+          <Container maxWidth={isMobile ? "xs" : "sm"} style={{ marginTop: isMobile ? 16 : 40, padding: isMobile ? 8 : 0 }}>
+            <Paper elevation={3} style={{ padding: isMobile ? 12 : 24 }}>
+              <Login
+                onLogin={(mobile) => {
+                  setLoggedIn(true);
+                  setUserMobile(mobile);
+                }}
+                onRegister={() => setShowOwnerForm(true)}
+                onBack={() => window.history.length > 1 ? window.history.back() : window.location.assign('/')} />
+            </Paper>
+          </Container>
+        )
       } />
       <Route path="/home" element={<HomePage onBack={handleLogout} userMobile={userMobile} />} />
     </Routes>
