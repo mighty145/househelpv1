@@ -265,7 +265,19 @@ export default function HomePage({ onBack, userMobile }) {
   const [filterHired, setFilterHired] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [hiringSlots, setHiringSlots] = useState({});  // Track hiring state per maid-slot combination
-  const [currentUser, setCurrentUser] = useState({ phone: '', name: '' });
+  // Persist user info in localStorage to retain after refresh
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('currentUser');
+    return saved ? JSON.parse(saved) : { phone: '', name: '' };
+  });
+  // Save user info to localStorage whenever it changes
+  useEffect(() => {
+    if (currentUser && currentUser.phone) {
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  }, [currentUser]);
   const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [currentView, setCurrentView] = useState('home'); // 'home', 'profile', 'hired-maids', 'shortlisted-maids'
