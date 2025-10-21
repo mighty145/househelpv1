@@ -106,6 +106,11 @@ function ConnectButton({ maid, disabled = false, isMobile }) {
 export default function HomePage({ onBack, userMobile }) {
   // Unhire slot handler
   const handleUnhire = async (maidPhone, slotIndex) => {
+    // Validate userMobile before making API call
+    if (!userMobile || !/^\d{10}$/.test(userMobile)) {
+      alert('Your mobile number is missing or invalid. Please log in again.');
+      return;
+    }
     try {
       const slotNumber = slotIndex + 1; // slot_number is 1-based
       const response = await fetch(`${API_BASE_URL}/api/cosmos/maids/${maidPhone}/slots/${slotNumber}/unhire`, {
