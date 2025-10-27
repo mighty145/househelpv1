@@ -2019,11 +2019,14 @@ export default function HomePage({ onBack, userMobile }) {
                   opacity: isCompletelyHired(maid) ? 0.7 : 1, // Slightly fade fully hired cards
                 }}>
                   <Box sx={{ position: 'absolute', top: 8, right: 12, zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                    <Button variant="text" sx={{ color: '#1976d2', fontWeight: 600, textTransform: 'none', fontSize: '0.95rem', minWidth: 'auto', p: 0 }}
-                      onClick={() => handleEditMaidFromCard(maid)}
-                    >
-                      Edit Househelp
-                    </Button>
+                      <Button
+                        variant="text"
+                        sx={{ color: '#1976d2', fontWeight: 600, textTransform: 'none', fontSize: '0.95rem', minWidth: 'auto', p: 0 }}
+                        onClick={() => handleEditMaidFromCard(maid)}
+                        disabled={isCompletelyHired(maid)}
+                      >
+                        Edit Househelp
+                      </Button>
                     <Box>
                       {maid.photoPath ? (
                         <Avatar
